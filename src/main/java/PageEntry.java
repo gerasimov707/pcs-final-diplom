@@ -24,9 +24,21 @@ public class PageEntry implements Comparable<PageEntry> {
     @Override
     public String toString() {
         return "PageEntry{" +
-                "pdfName='" + pdfName + '\'' +
-                ", page=" + page +
+                "pdfName='" + pdfName + ' ' +
+        ", page=" + page +
                 ", count=" + count +
                 '}';
+    }
+
+    public String getPdfName() {
+        return pdfName;
+    }
+
+    public int getPage() {
+        return page;
+    }
+
+    public int getCount() {
+        return count;
     }
 }

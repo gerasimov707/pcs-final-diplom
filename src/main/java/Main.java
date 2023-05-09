@@ -1,39 +1,56 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.List;
 
 public class Main {
+    private static ServerSocket serverSocket;
+    private static Socket clientSocket;
+
+    private static BufferedReader in;
+    private static BufferedWriter out;
+
     public static void main(String[] args) throws Exception {
         BooleanSearchEngine engine = new BooleanSearchEngine(new File("pdfs"));
 
-        try (ServerSocket serverSocket = new ServerSocket(8989);) {
+        try {
+            serverSocket = new ServerSocket(8989);
             while (true) {
-                try (
-                        Socket socket = serverSocket.accept();
-                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-                        PrintWriter out = new PrintWriter(socket.getOutputStream());
-                ) {
-                    String word = in.readLine().split(" ")[1].split("/")[1];
-                    System.out.println(word);
-                    if (Objects.equals(word, "stop")) {
-                        serverSocket.close();
-                        break;
-                    }else {
-                        System.out.println(engine.search(word));
-                    }
+                try {
+                    clientSocket = serverSocket.accept();
+                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
+                    out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
 
+                    String word = in.readLine();
+                    out.write(getJsonArray(engine.search(word)).toString());
+                    out.newLine();
+                    out.flush();
+                } finally {
+                    clientSocket.close();
                     out.close();
                     in.close();
-                    socket.close();
                 }
             }
-        } catch (
-                IOException e) {
-            System.out.println("Не могу стартовать сервер");
-            e.printStackTrace();
+        } catch (IOException e) {
+            out.write("Не могу стартовать сервер");
+        } finally {
+            serverSocket.close();
         }
     }
+
+    private static JSONArray getJsonArray(List<PageEntry> list) {
+        JSONArray jsonArray = new JSONArray();
+        for (PageEntry pageEntry : list) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("pdfName", pageEntry.getPdfName());
+            jsonObject.put("page", pageEntry.getPage());
+            jsonObject.put("count", pageEntry.getCount());
+            jsonArray.put(jsonObject);
+        }
+        return jsonArray;
     }
+}

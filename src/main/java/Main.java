@@ -26,7 +26,7 @@ public class Main {
                     out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
 
                     String word = in.readLine();
-                    out.write(getJsonArray(engine.search(word)).toString());
+                    out.write(getJsonArray(engine.search(word.toLowerCase())).toString());
                     out.newLine();
                     out.flush();
                 } finally {
